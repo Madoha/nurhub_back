@@ -1,8 +1,8 @@
-import catchAsync from "../utils/catchAsync";
-import { PASSWORD_RESET_REQUEST_TEMPLATE, PASSWORD_RESET_SUCCESS_TEMPLATE } from "./emailTemplates";
-import { mailtrapClient, sender } from "./mailtrap.config";
+const catchAsync = require("../utils/catchAsync");
+const { PASSWORD_RESET_REQUEST_TEMPLATE, PASSWORD_RESET_SUCCESS_TEMPLATE } = require("./emailTemplates");
+const { mailtrapClient, sender } = require("./mailtrap.config");
 
-export const sendPasswordResetEmail = catchAsync(async (email, resetUrl) => {
+const sendPasswordResetEmail = catchAsync(async (email, resetUrl) => {
     const recipients = [ email ];
 
     const response = await mailtrapClient.sendMail({
@@ -16,7 +16,7 @@ export const sendPasswordResetEmail = catchAsync(async (email, resetUrl) => {
     console.log('response', response);
 });
 
-export const sendResetSuccessEmail = catchAsync(async (email) => {
+const sendResetSuccessEmail = catchAsync(async (email) => {
     const recipients = [ email ];
 
     const response = await mailtrapClient.sendMail({
@@ -27,3 +27,5 @@ export const sendResetSuccessEmail = catchAsync(async (email) => {
         category: "Password Reset"
       });
 });
+
+module.exports = { sendPasswordResetEmail, sendResetSuccessEmail };
