@@ -61,7 +61,7 @@ const login = catchAsync(async (req, res, next) => {
 
     const token = generateToken({
         id: result.id,
-        role: await role.findByPk(result.roleId)
+        role: result.roleId
     });
 
     return res.json({
