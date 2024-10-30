@@ -21,6 +21,8 @@ const signup = catchAsync(async (req, res, next) => {
        return next(new AppError('This email is alredy registered', 400))
     }
 
+    const roleUp =  await role.findOne({where: {name: 'Tester'}});
+
     const newUser = await user.create({
         username: body.username,
         firstName: body.firstName,
@@ -28,29 +30,24 @@ const signup = catchAsync(async (req, res, next) => {
         email: body.email,
         password: body.password,
         confirmPassword: body.confirmPassword,
-        roleId: 0,
+        roleId: roleUp.id,
     });
 
     if (!newUser) return next(new AppError('Failod to create the user', 400));
 
     const result = newUser.toJSON();
 
-    // delete result.password;
-    // delete result.deletedAt; // check 2 way
+    delete result.password;
+    delete result.deletedAt;
 
     result.token = generateToken({
         id: body.id,
-        role: await role.findByPk(result.roleId)
+        role: await role.findByPk(newUser.roleId)
     });
 
     return res.status(201).json({
         status: 'success',
-        // data: result 
-        data: {
-            ...result._doc,
-            password: undefined,
-            deletedAt: undefined
-        }
+        data: result 
     });
 });
 
@@ -63,7 +60,7 @@ const login = catchAsync(async (req, res, next) => {
     if (!result || !(await bcrypt.compare(password, result.password))) return next(new AppError('Incorrect email or password', 401));
 
     const token = generateToken({
-        email: result.email,
+        id: result.id,
         role: await role.findByPk(result.roleId)
     });
 
@@ -83,7 +80,7 @@ const authentication = catchAsync(async (req, res, next) => {
 
     const tokenDetails = jwt.verify(emailToken, process.env.JWT_SECRET_KEY);
 
-    const freshUser = await user.findOne({where: {email: tokenDetails.email}});
+    const freshUser = await user.findOne({where: {id: tokenDetails.id}});
 
     if (!freshUser) return next(new AppError('User no longer exists', 400));
 
