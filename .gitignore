@@ -16,7 +16,7 @@ yarn-error.log*
 Thumbs.db
 
 # Sequelize configuration
-.sequelizerc
+# .sequelizerc
 
 # Miscellaneous
 *.tmp
