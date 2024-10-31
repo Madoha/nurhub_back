@@ -90,7 +90,7 @@ const authentication = catchAsync(async (req, res, next) => {
 
 const restrictTo = (...roleId) => {
     const checkPermission = (req, res, next) => {
-        if (roleId != req.user.roleId) return next(new AppError('You do not have permission to perform this action', 403));
+        if (!roleId.includes(req.user.roleId)) return next(new AppError('You do not have permission to perform this action', 403));
 
         return next();
     }
@@ -101,11 +101,10 @@ const resetPassword = catchAsync(async (req, res, next) => {
     const { token } = req.params;
     const { newPassword, confirmNewPassword } = req.body;
 
-    const currentUser = await user.findOne({
-        resetPasswordToken: token,
-        ressetPasswordExpiresAt: { $gt: Date.now() },
-    });
+    const currentUser = await user.findOne({ where: { resetPasswordToken: token }});
     if (!currentUser) return next(new AppError('Invalid or expired reset token', 400));
+
+    if (currentUser.resetPasswordExpiresAt < Date.now()) return next(new AppError('Token expired', 400));
 
     if (newPassword != confirmNewPassword) return next(new AppError('Password does not match', 401));
 
@@ -113,7 +112,7 @@ const resetPassword = catchAsync(async (req, res, next) => {
 
     currentUser.password = hashedPassword;
     currentUser.resetPasswordToken = undefined;
-    currentUser.ressetPasswordExpiresAt = undefined;
+    currentUser.resetPasswordExpiresAt = undefined;
     await currentUser.save();
 
     await sendResetSuccessEmail(currentUser.email);
@@ -126,18 +125,18 @@ const resetPassword = catchAsync(async (req, res, next) => {
 const forgotPassword = catchAsync(async (req, res, next) => {
     const { email } = req.body;
 
-    const user = await user.findOne({email});
-    if(!user) return next(new AppError('User not found', 400));
+    const currentUser = await user.findOne({ where: { email }});
+    if(!currentUser) return next(new AppError('User not found', 400));
 
     const resetToken = crypto.randomBytes(20).toString('hex');
-    const resetTokenExpriesAt = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
+    const resetTokenExpiresAt = new Date(Date.now() + 3600000); // 1 hour
 
-    user.resetToken = resetToken;
-    user.resetTokenExpriesAt = resetTokenExpriesAt;
+    currentUser.resetPasswordToken = resetToken;
+    currentUser.resetPasswordExpiresAt = resetTokenExpiresAt;
 
-    await user.save();
+    await currentUser.save();
 
-    await sendPasswordResetEmail(user.email, `${process.env.CLIENT_URL}/reset-password/${resetToken}`);
+    await sendPasswordResetEmail(currentUser.email, `${process.env.CLIENT_URL}/api/v1/auth/reset-password/${resetToken}`);
 
     res.status(200).json({success: true, message: "Password reset link sent to your email" });
 });

@@ -6,6 +6,6 @@ router.route('/signup').post(signup);
 router.route('/login').post(login);
 router.route('/forgot-password').post(forgotPassword);
 router.route('/reset-password/:token').post(resetPassword);
-router.route('/change-password').patch(authentication, changePassword);
+router.route('/change-password').post(authentication, changePassword);
 
 module.exports = router;

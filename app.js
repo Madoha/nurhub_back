@@ -5,6 +5,7 @@ const catchAsync = require('./utils/catchAsync');
 const authRouter = require('./route/authRoute');
 const userRouter = require('./route/userRoute');
 const globalErrorHandler = require('./controllers/errorController');
+const AppError = require('./utils/appError');
 
 const app = express();
 app.use(cors());
