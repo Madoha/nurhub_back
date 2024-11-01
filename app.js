@@ -4,12 +4,14 @@ const cors = require('cors');
 const catchAsync = require('./utils/catchAsync');
 const authRouter = require('./route/authRoute');
 const userRouter = require('./route/userRoute');
-const globalErrorHandler = require('./controllers/errorController');
+const globalErrorHandler = require('./middlewares/errorMiddleware');
 const AppError = require('./utils/appError');
+const cookieParser = require('cookie-parser');
 
 const app = express();
-app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
+app.use(cors());
 
 // route
 app.use('/api/v1/auth', authRouter);

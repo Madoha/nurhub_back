@@ -1,8 +1,10 @@
 'use strict';
 const { Model, Sequelize, DataTypes } = require('sequelize');
+const AppError = require("../../utils/appError");
 const bcrypt = require('bcrypt');
 const sequelize = require('../../config/database');
 const role = require('./role');
+const token = require('./token');
 
 const user = sequelize.define('user', {
   id: {
@@ -115,7 +117,10 @@ const user = sequelize.define('user', {
 });
 
 user.associate = (models) => {
-  user.belongsTo(models.role, { foreignKey: 'roleId' })
+  user.belongsTo(models.role, { foreignKey: 'roleId' }),
+  user.hasOne(models.token, { foreignKey: 'userId' })
 };
+
+
 
 module.exports = user;

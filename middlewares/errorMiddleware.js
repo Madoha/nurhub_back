@@ -46,7 +46,7 @@ const globalErrorHandler = (err, req, res, next) => {
     if (process.env.NODE_ENV === 'development'){
         return sendErrorDev(err, res);
     }
-    sendErrorProd(err, res);
+    sendErrorDev(err, res);
 }
 
 module.exports = globalErrorHandler;

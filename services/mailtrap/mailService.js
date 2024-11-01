@@ -1,5 +1,5 @@
 const { PASSWORD_RESET_REQUEST_TEMPLATE, PASSWORD_RESET_SUCCESS_TEMPLATE } = require("./emailTemplates");
-const { mailtrapClient, sender } = require("./mailtrap.config");
+const { mailtrapClient, sender } = require("../../config/mailtrap.config");
 
 const sendPasswordResetEmail = async (email, resetUrl) => {
   try {
