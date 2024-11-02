@@ -37,6 +37,9 @@ const globalErrorHandler = (err, req, res, next) => {
     if(err.name === 'JsonWebTokenError'){
         err = new AppError('Invalid Token', 401);
     }
+    if (err.name === 'TokenExpiredError') {
+        err = new AppError('Token has expired', 401);
+    }
     if(err.name === 'SequelizeValidationError'){
         err = new AppError(err.errors[0].message, 400);
     }

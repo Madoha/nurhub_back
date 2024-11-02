@@ -3,6 +3,7 @@ const AppError = require("../../utils/appError");
 const tokenService = require("./tokenService");
 const role = require('../../db/models/role');
 const UserTokenDto = require('../../dto/userTokenDto');
+const { isGoogleProvider } = require('../../utils/authUtils'); 
 const { sendPasswordResetEmail, sendResetSuccessEmail } = require('../mailtrap/mailService');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
@@ -19,8 +20,7 @@ class AuthService {
             throw new AppError('This email is alredy registered', 400)
         }
 
-        const roleUp = await role.findOne({where: {name: roleName}});
-        if (!roleUp) throw new AppError('Role does not exists', 400);
+        const roleUp = await this.getRoleByName(roleName);
 
         const newUser = await user.create({
             username: username,
@@ -35,8 +35,7 @@ class AuthService {
         const userDto = new UserTokenDto(newUser);
         userDto.role = roleUp.name;
 
-        const tokens = await tokenService.generateTokens({...userDto}); 
-        await tokenService.saveToken(userDto.id, tokens.refreshToken);
+        const tokens = await this.generateAndSaveTokens(userDto);
 
         return {
             ...tokens,
@@ -55,9 +54,7 @@ class AuthService {
 
         const userDto = new UserTokenDto(result);
         userDto.role = (await role.findByPk(result.roleId)).name;
-        const tokens = await tokenService.generateTokens({...userDto});
-
-        await tokenService.saveToken(userDto.id, tokens.refreshToken);
+        const tokens = await this.generateAndSaveTokens(userDto);
 
         return {...tokens, user: userDto};
     }
@@ -69,8 +66,7 @@ class AuthService {
             url: 'https://www.googleapis.com/oauth2/v1/userinfo',
         })
         const googleEmail = data.email;
-        const roleUp = await role.findOne({where: {name: "Tester"}});
-        if (!roleUp) throw new AppError('Can not find the role', 400);
+        const roleUp = await this.getRoleByName(process.env.GOOGLE_AUTH_USER_ROLE)
 
         const currentUser = await user.findOne({where: {email: googleEmail }});
         if (!currentUser){
@@ -85,8 +81,11 @@ class AuthService {
 
         if (currentUser && !currentUser.googleId) throw new AppError('You already registered with password', 400);
 
-        const tokensToCookie = await tokenService.generateTokens({ id: currentUser.id, email: currentUser.email, role: roleUp.name });
-        await tokenService.saveToken(currentUser.id, tokensToCookie.refreshToken);
+        // const tokensToCookie = await tokenService.generateTokens({ id: currentUser.id, email: currentUser.email, role: roleUp.name });
+        // await tokenService.saveToken(currentUser.id, tokensToCookie.refreshToken);
+        const userDto = new UserTokenDto(currentUser);
+        userDto.role = roleUp.name;
+        const tokensToCookie = await this.generateAndSaveTokens(userDto);
 
         return tokensToCookie;
     }
@@ -106,17 +105,18 @@ class AuthService {
             throw new AppError('Unauthorized', 401); // ???????????  1:01:50
         }
 
+        // should we put 0 to exist cookies ???
+
         const currentUser = await user.findByPk(userData.id);
         const userDto = new UserTokenDto(currentUser);
-        const tokens = await tokenService.generateTokens({...userDto});
-
-        await tokenService.saveToken(userDto.id, tokens.refreshToken);
+        const tokens = await this.generateAndSaveTokens(userDto);
         return {...tokens, user: userDto};
     }
 
     async forgotPassword(email){
         const currentUser = await user.findOne({ where: { email }});
         if(!currentUser) throw new AppError('User not found', 400);
+        if(await isGoogleProvider(currentUser)) throw new AppError('You dont have access to this function', 400); 
 
         const resetToken = crypto.randomBytes(20).toString('hex');
         const resetTokenExpiresAt = new Date(Date.now() + 3600000); // 1 hour
@@ -132,6 +132,7 @@ class AuthService {
     async resetPassword(token, newPassword, confirmNewPassword){
         const currentUser = await user.findOne({ where: { resetPasswordToken: token }});
         if (!currentUser) throw new AppError('Invalid or expired reset token', 400);
+        if(await isGoogleProvider(currentUser)) throw new AppError('You dont have access to this function', 400); 
 
         if (currentUser.resetPasswordExpiresAt < Date.now()) throw new AppError('Token expired', 400);
 
@@ -149,7 +150,7 @@ class AuthService {
 
     async changePassword(userId, oldPassword, newPassword, confirmNewPassword){
         const currentUser = await user.findByPk(userId);
-
+        if(await isGoogleProvider(currentUser)) throw new AppError('You dont have access to this function', 400); 
         const isPasswordCorrect = await bcrypt.compare(oldPassword, currentUser.password);
         if (!isPasswordCorrect || newPassword != confirmNewPassword) throw new AppError('Password in correct or does not match', 401);
 
@@ -158,6 +159,19 @@ class AuthService {
         currentUser.password = hashedPassword;
         await currentUser.save();
     }
+
+    async getRoleByName(roleName) {
+        const roleUp = await role.findOne({ where: { name: roleName } });
+        if (!roleUp) throw new AppError('Role does not exist', 400);
+        return roleUp;
+    }
+    
+    async generateAndSaveTokens(userDto) {
+        const tokens = await tokenService.generateTokens({ ...userDto });
+        await tokenService.saveToken(userDto.id, tokens.refreshToken);
+        return tokens;
+    }
+    
 }
 
 module.exports = new AuthService();

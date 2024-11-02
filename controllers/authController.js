@@ -1,22 +1,19 @@
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-const crypto = require('crypto');
 const catchAsync = require("../utils/catchAsync");
 const AppError = require('../utils/appError');
-const role = require("../db/models/role");
-const user = require("../db/models/user");
 const authService = require('../services/auth/authService');
 const UserRegistrationDto = require('../dto/userRegistrationDto');
 const { OAuth2Client } = require('google-auth-library');
+const { refreshTokenCookieOptions } = require('../utils/authUtils');
 
 const oauth2Client = new OAuth2Client(process.env.CLIENT_ID, process.env.CLIENT_SECRET, 'http://localhost:4001/api/auth/google/callback');
+const JWT_REFRESH_EXPIRES_IN_MS = 7 * 24 * 60 * 60 * 1000;
 
 const signup = catchAsync(async (req, res, next) => {
     const body = req.body;
     const userRegDto = new UserRegistrationDto(body);
     
     const userData = await authService.registration(userRegDto);
-    res.cookie('refreshToken', userData.refreshToken, { maxAge: 14 * 24 * 60 * 60 * 1000, httpOnly: true })
+    res.cookie('refreshToken', userData.refreshToken, { maxAge: JWT_REFRESH_EXPIRES_IN_MS, httpOnly: true })
 
     return res.status(201).json(userData);
 });
@@ -25,7 +22,7 @@ const login = catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
 
     const userData = await authService.login(email, password);
-    res.cookie('refreshToken', userData.refreshToken, { maxAge: 14 * 24 * 60 * 60 * 1000, httpOnly: true })
+    res.cookie('refreshToken', userData.refreshToken, { maxAge: JWT_REFRESH_EXPIRES_IN_MS, httpOnly: true })
 
     return res.json(userData);
 });
@@ -48,7 +45,7 @@ const googleCallback = catchAsync(async (req, res, next) => {
     //     Date.now() + 1 * (60 * 60 * 1000)
     // ))
     res.cookie('refreshToken', result.refreshToken, refreshTokenCookieOptions(
-        Date.now() + 7 * (24 * 60 * 60 * 1000)
+        Date.now() + JWT_REFRESH_EXPIRES_IN_MS
     ))
 
     res.json({status: true, data: result.accessToken});
@@ -70,32 +67,10 @@ const googleCallback = catchAsync(async (req, res, next) => {
 
 const googleLogout = catchAsync(async (req, res, next) => {
     // res.cookie('accessToken', accessTokenCookieOptions(0))
-    res.cookie('refreshToken', refreshTokenCookieOptions(0))
+    // res.cookie('refreshToken', refreshTokenCookieOptions(0))
+    res.clearCookie('refreshToken');
     res.redirect('http://localhost:3000')
-})
-
-// function accessTokenCookieOptions(expires_ms){
-//     let cookieOptions = {
-//         secure: true,
-//         sameSite: 'strict',
-//         path: '/',
-//         expires: new Date(expires_ms),
-//         maxAge: expires_ms ? undefined : 0
-//     }
-//     return cookieOptions;
-// }
-
-function refreshTokenCookieOptions(expires_ms){
-    let cookieOptions = {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        path: '/',
-        expires: new Date(expires_ms),
-        maxAge: expires_ms ? undefined : 0
-    }
-    return cookieOptions;
-}
+});
 
 const restrictTo = (...allowedRoleIds) => {
     return (req, res, next) => {
@@ -116,7 +91,7 @@ const refreshToken = catchAsync(async (req, res, next) => {
     const refreshToken = req.cookies.refreshToken;
     
     const userData = await authService.refresh(refreshToken);
-    res.cookie('refreshToken', userData.refreshToken, { maxAge: 14 * 24 * 60 * 60 * 1000, httpOnly: true});
+    res.cookie('refreshToken', userData.refreshToken, { maxAge: JWT_REFRESH_EXPIRES_IN_MS, httpOnly: true});
     return res.json(userData);
 });
 
