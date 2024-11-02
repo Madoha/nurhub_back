@@ -1,10 +1,14 @@
-const { signup, login, logout, refreshToken, forgotPassword, resetPassword, changePassword } = require('../controllers/authController'); 
+const { signup, login, googleLogin, googleCallback, googleLogout, logout, refreshToken, forgotPassword, resetPassword, changePassword } = require('../controllers/authController'); 
 const authentication = require('../middlewares/authMiddleware');
 
 const router = require('express').Router();
 
 router.route('/signup').post(signup);
 router.route('/login').post(login);
+router.route('/google').get(googleLogin);
+router.route('/google/callback').get(googleCallback);
+// router.route('/is-signed-in').get(isSignedIn);
+router.route('/google-logout').get(googleLogout);
 router.route('/logout').get(authentication, logout);
 router.route('/refresh').get(refreshToken);
 router.route('/forgot-password').post(forgotPassword);

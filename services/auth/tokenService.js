@@ -43,7 +43,7 @@ class TokenService {
 
     async findToken(refreshToken){
         const userData = await token.findOne({where: {refreshToken: refreshToken}});
-        if(userData) return null;
+        if(!userData) return null;
         return userData;
     }
 }

@@ -9,6 +9,10 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      googleId: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
       username: {
         type: Sequelize.STRING
       },
@@ -22,6 +26,10 @@ module.exports = {
         type: Sequelize.STRING
       },
       password: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      avatarUrl: {
         type: Sequelize.STRING
       },
       roleId: {

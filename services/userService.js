@@ -5,6 +5,8 @@ const AppError = require('../utils/appError');
 
 class UserService {
     async getUserById(userId){
+        if (!userId) throw new AppError('User ID cannot be undefined', 400);
+
         const userDetail = await user.findByPk(userId);
 
         if (!userDetail) throw new AppError('Invalid user id', 400);

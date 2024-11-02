@@ -10,7 +10,9 @@ const bcrypt = require('bcrypt');
 class AuthService {
     async registration(dto){
         const { email, username, firstName, lastName, password, confirmPassword, roleName } = dto;
-        console.log('email', email)
+        
+        if (!email || !password || !confirmPassword || password != confirmPassword) throw new AppError('Something wrong this email or password');
+
         const candidate = await user.findOne({where: {email: email}});
 
         if (candidate) {
@@ -46,7 +48,10 @@ class AuthService {
         if (!email || !password) throw new AppError('Email or Password not provided', 400);
 
         const result = await user.findOne({where: {email: email}});
-        if (!result || !(await bcrypt.compare(password, result.password))) throw new AppError('Incorrect email or password', 401);
+        if (!result || result.googleId) throw new AppError('Email not found or already registered', 400);
+
+        if (!(await bcrypt.compare(password, result.password))) throw new AppError('Incorrect email or password', 401);
+
 
         const userDto = new UserTokenDto(result);
         userDto.role = (await role.findByPk(result.roleId)).name;
@@ -55,6 +60,35 @@ class AuthService {
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
 
         return {...tokens, user: userDto};
+    }
+    
+    async googleCallback(tokens, oauth2Client){
+        oauth2Client.setCredentials(tokens)
+
+        const { data } = await oauth2Client.request({
+            url: 'https://www.googleapis.com/oauth2/v1/userinfo',
+        })
+        const googleEmail = data.email;
+        const roleUp = await role.findOne({where: {name: "Tester"}});
+        if (!roleUp) throw new AppError('Can not find the role', 400);
+
+        const currentUser = await user.findOne({where: {email: googleEmail }});
+        if (!currentUser){
+            currentUser = await user.
+            create({
+                googleId: data.id.toString(),
+                email: googleEmail,
+                roleId: roleUp.id,
+                avatarUrl: data.picture,
+            });
+        }
+
+        if (currentUser && !currentUser.googleId) throw new AppError('You already registered with password', 400);
+
+        const tokensToCookie = await tokenService.generateTokens({ id: currentUser.id, email: currentUser.email, role: roleUp.name });
+        await tokenService.saveToken(currentUser.id, tokensToCookie.refreshToken);
+
+        return tokensToCookie;
     }
 
     async logout(refreshToken){
@@ -69,11 +103,11 @@ class AuthService {
         const tokenFromDb = await tokenService.findToken(refreshToken);
 
         if (!userData || !tokenFromDb){
-            throw new AppError('Unauthorized', 401);
+            throw new AppError('Unauthorized', 401); // ???????????  1:01:50
         }
 
-        const user = await user.findByPk(userData.id);
-        const userDto = new UserTokenDto(user);
+        const currentUser = await user.findByPk(userData.id);
+        const userDto = new UserTokenDto(currentUser);
         const tokens = await tokenService.generateTokens({...userDto});
 
         await tokenService.saveToken(userDto.id, tokens.refreshToken);

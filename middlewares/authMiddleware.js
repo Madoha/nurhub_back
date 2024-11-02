@@ -11,8 +11,14 @@ const authentication = catchAsync(async (req, res, next) => {
 
     if(!emailToken) return next(new AppError('Please login to get access', 401));
 
-    const tokenDetails = await tokenService.validateAccessToken(emailToken);
+    const tokenDetails = await tokenService.validateAccessToken(emailToken).catch(err => {
+        return next(new AppError('Invalid token', 401));
+    });
 
+    if (!tokenDetails || !tokenDetails.id) {
+        return next(new AppError('Invalid token details', 401));
+    }
+    
     const freshUser = await user.findOne({where: {id: tokenDetails.id}});
 
     if (!freshUser) return next(new AppError('User no longer exists', 400));

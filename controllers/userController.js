@@ -5,7 +5,7 @@ const catchAsync = require("../utils/catchAsync");
 
 const getProfile = catchAsync(async (req, res, next) => {
     const userId = req.params.id;
-
+    
     const currentUser = await userService.getUserById(userId);
 
     return res.json({
