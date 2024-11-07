@@ -27,8 +27,7 @@ class AuthService {
             firstName: firstName,
             lastName: lastName,
             email: email,
-            password: password, // password already hashed because of orm
-            confirmPassword: confirmPassword,
+            password: bcrypt.hashSync(password, 10), // password already hashed because of orm
             roleId: roleUp.id,
         });
 
@@ -70,8 +69,7 @@ class AuthService {
 
         const currentUser = await user.findOne({where: {email: googleEmail }});
         if (!currentUser){
-            currentUser = await user.
-            create({
+            currentUser = await user.create({
                 googleId: data.id.toString(),
                 email: googleEmail,
                 roleId: roleUp.id,
