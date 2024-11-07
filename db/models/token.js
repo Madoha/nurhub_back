@@ -4,7 +4,7 @@ const {
 } = require('sequelize');
 const sequelize = require('../../config/database');
 const user = require('./user');
-const token = sequelize.define('token', {
+const token = sequelize.define('tokens', {
     id: {
       allowNull: false,
       autoIncrement: true,
@@ -27,7 +27,7 @@ const token = sequelize.define('token', {
     }
 }, {
   freezeTableName: true,
-  modelName: 'token'
+  modelName: 'tokens'
 });
 
 token.associate = (models) => {

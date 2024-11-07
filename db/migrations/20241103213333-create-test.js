@@ -2,18 +2,18 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('tokens', {
+    await queryInterface.createTable('tests', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      userId: {
-        type: Sequelize.INTEGER,
+      type: {
+        type: Sequelize.ENUM('mcq', 'creative')
       },
-      refreshToken: {
-        type: Sequelize.STRING
+      moduleId: {
+        type: Sequelize.INTEGER,
       },
       createdAt: {
         allowNull: false,
@@ -26,6 +26,7 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('tokens');
+    await queryInterface.dropTable('tests');
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_tests_type";');
   }
 };

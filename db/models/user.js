@@ -6,7 +6,7 @@ const sequelize = require('../../config/database');
 const role = require('./role');
 const token = require('./token');
 
-const user = sequelize.define('user', {
+const user = sequelize.define('users', {
   id: {
     allowNull: false,
     autoIncrement: true,
@@ -121,14 +121,12 @@ const user = sequelize.define('user', {
 }, {
   paranoid: true,
   freezeTableName: true,
-  modelName: 'user'
+  modelName: 'users'
 });
 
 user.associate = (models) => {
   user.belongsTo(models.role, { foreignKey: 'roleId' }),
   user.hasOne(models.token, { foreignKey: 'userId' })
 };
-
-
 
 module.exports = user;

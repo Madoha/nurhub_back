@@ -4,6 +4,10 @@ const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
 const process = require('process');
+const course = require('./course');
+const courseModule = require('./coursemodule');
+const user = require('./user');
+const certificate = require('./certificate');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../../config/config.js')[env];
@@ -39,5 +43,8 @@ Object.keys(db).forEach(modelName => {
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
+
+course.associate({ courseModule, user, certificate });
+courseModule.associate({ course })
 
 module.exports = db;

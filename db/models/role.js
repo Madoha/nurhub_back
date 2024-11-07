@@ -3,7 +3,7 @@ const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../../config/database');
 const user = require('./user');
 
-const role = sequelize.define('role', {
+const role = sequelize.define('roles', {
   id: {
     allowNull: false,
     autoIncrement: true,
@@ -36,7 +36,7 @@ const role = sequelize.define('role', {
 }, {
   paranoid: true,
   freezeTableName: true,
-  modelName: 'role',
+  modelName: 'roles',
 });
 
 role.associate = (models) => {

@@ -1,5 +1,5 @@
 const user = require("../db/models/user");
-const userService = require("../services/userService");
+const userService = require('../services/userService');
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 

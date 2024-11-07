@@ -1,4 +1,4 @@
-const UserResponseDto = require("../dto/userResponseDto");
+const UserResponseDto = require("../dto/user/userResponseDto");
 const user = require('../db/models/user');
 const role = require('../db/models/role');
 const AppError = require('../utils/appError');
