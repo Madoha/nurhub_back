@@ -21,7 +21,7 @@ module.exports = {
       videoUrl: {
         type: Sequelize.STRING
       },
-      moduleId: {
+      courseModuleId: {
         type: Sequelize.INTEGER,
       },
       createdAt: {

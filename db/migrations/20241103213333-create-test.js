@@ -12,7 +12,7 @@ module.exports = {
       type: {
         type: Sequelize.ENUM('mcq', 'creative')
       },
-      moduleId: {
+      courseModuleId: {
         type: Sequelize.INTEGER,
       },
       createdAt: {

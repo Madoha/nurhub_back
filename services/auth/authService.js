@@ -20,7 +20,7 @@ class AuthService {
             throw new AppError('This email is alredy registered', 400)
         }
 
-        const roleUp = await this.getRoleByName(roleName);
+        const roleUp = await this.getRoleByName(roleName ? roleName : 'Tester');
 
         const newUser = await user.create({
             username: username,

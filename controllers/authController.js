@@ -5,8 +5,8 @@ const UserRegistrationDto = require('../dto/user/userRegistrationDto');
 const { OAuth2Client } = require('google-auth-library');
 const { refreshTokenCookieOptions } = require('../utils/authUtils');
 
-const oauth2Client = new OAuth2Client(process.env.CLIENT_ID, process.env.CLIENT_SECRET, 'http://localhost:4001/api/auth/google/callback');
-const JWT_REFRESH_EXPIRES_IN_MS = 7 * 24 * 60 * 60 * 1000;
+const oauth2Client = new OAuth2Client(process.env.CLIENT_ID, process.env.CLIENT_SECRET, `${process.env.SERVER_URL}/api/auth/google/callback`);
+const JWT_REFRESH_EXPIRES_IN_MS = 7 * 24 * 60 * 60 * 1000; // 7d in ms
 
 const signup = catchAsync(async (req, res, next) => {
     const body = req.body;
