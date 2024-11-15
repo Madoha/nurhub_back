@@ -69,7 +69,7 @@ const addLessons = catchAsync(async (req, res, next) => {
 
     const lessons = await lesson.bulkCreate(req.body.map(lesson => ({
         ...lesson,
-        moduleId: req.params.moduleId
+        courseModuleId: req.params.moduleId
     })));
 
     return res.status(201).json(lessons);
@@ -144,4 +144,56 @@ const addQuestionsAndAnswers = catchAsync(async (req, res, next) => {
     }
 });
 
-module.exports = { create, getWith, update, deleted, addModules, addLessons, addTests, addQuestionsAndAnswers };
+const getModuleTests = catchAsync(async (req, res, next) => {
+    const { courseId, moduleId } = req.params;
+
+    const currentCourse = await course.findByPk(courseId);
+    if (!currentCourse) return next(new AppError('Coruse not found', 404));
+
+    const currentModule = await courseModule.findOne({where: { id: moduleId, courseId }});
+    if (!currentModule) return next(new AppError('Module not found in the specified course', 404));
+
+    const currentTests = await test.findAll({
+        where: { courseModuleId: moduleId }
+    });
+
+    if (!currentTests || currentTests.length === 0) {
+        return res.status(200).json({
+            success: true,
+            message: 'No tests found for this module',
+            tests: []
+        });
+    }
+
+    const testsWithDetails = [];
+    for (const currentTest of currentTests) {
+        const testQuestions = await question.findAll({where: { testId: currentTest.id }});
+
+        const questionWithAnswers = [];
+        for (const testQuestion of testQuestions) {
+            const questionAnswers = await answer.findAll({
+                where: { questionId: testQuestion.id }
+            });
+
+            questionWithAnswers.push({
+                id: testQuestion.id,
+                text: testQuestion.text,
+                answers: questionAnswers
+            });
+        }
+
+        testsWithDetails.push({
+            id: currentTest.id,
+            type: currentTest.type,
+            questions: questionWithAnswers
+        });
+    }
+
+    res.json({
+        success: true,
+        message: 'Tests retrieved successfully',
+        tests: testsWithDetails
+    });
+});
+
+module.exports = { create, getWith, update, deleted, addModules, addLessons, addTests, addQuestionsAndAnswers, getModuleTests };
