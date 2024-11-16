@@ -13,6 +13,14 @@ const create = catchAsync(async (req, res, next) => {
     return res.status(201).json(newCourse);
 });
 
+const getAllCourses = catchAsync(async (req, res, next) => {
+    const courses = await course.findAll();
+    res.json({
+        success:true,
+        courses
+    })
+})
+
 const getWith = catchAsync(async (req, res, next) => {
     const courseId = req.params.id;
     const currentCourse = await course.findByPk(courseId);
@@ -196,4 +204,4 @@ const getModuleTests = catchAsync(async (req, res, next) => {
     });
 });
 
-module.exports = { create, getWith, update, deleted, addModules, addLessons, addTests, addQuestionsAndAnswers, getModuleTests };
+module.exports = { create, getWith, update, deleted, addModules, addLessons, addTests, addQuestionsAndAnswers, getModuleTests, getAllCourses };

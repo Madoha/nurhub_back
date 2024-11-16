@@ -1,9 +1,11 @@
-const { create, getWith, update, deleted, addModules, addLessons, addTests, addQuestionsAndAnswers, getModuleTests } = require('../controllers/courseController');
+const { create, getWith, update, deleted, addModules, addLessons, addTests, addQuestionsAndAnswers, getModuleTests, getAllCourses } = require('../controllers/courseController');
 const authentication = require('../middlewares/authMiddleware');
 
 const router = require('express').Router();
 
-router.route('/').post(create);
+router.route('/')
+    .post(create)
+    .get(getAllCourses);
 
 router.route('/:id').get(getWith)
     .put(update)

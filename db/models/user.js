@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const sequelize = require('../../config/database');
 const role = require('./role');
 const token = require('./token');
+const streak = require('./streak');
 
 const user = sequelize.define('users', {
   id: {
@@ -126,6 +127,7 @@ const user = sequelize.define('users', {
 
 user.associate = (models) => {
   user.belongsTo(models.role, { foreignKey: 'roleId' }),
+  user.hasOne(streak, { foreignKey: 'userId' }),
   user.hasOne(models.token, { foreignKey: 'userId' })
 };
 
