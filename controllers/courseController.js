@@ -206,13 +206,41 @@ const getModuleTests = catchAsync(async (req, res, next) => {
     });
 });
 
+const getStarted = catchAsync(async (req, res, next) => {
+    const { courseId } = req.params;
+    const userId = req.user.id;
+
+    const currentCourse = await course.findByPk(courseId);
+    if (!currentCourse) return next(new AppError('Course not found', 404));
+
+    // todo achievements
+
+    await userCourseProgress.create({
+        userId,
+        courseId
+    });
+
+    return res.status(200);
+});
+
+const getUserCourses = catchAsync(async (req, res, next) => {
+    const userId = req.user.id;
+
+    const allCourses = await userCourseProgress.findAll({where: { userId }});
+
+    return res.json({
+        success: true,
+        data: allCourses
+    });
+});
+
 const updateProgress = catchAsync(async (req, res, next) => {
     const { courseId, moduleId } = req.params;
     const userId = req.user.id;
     const { testScore } = req.body;
 
     const currentCourse = await course.findByPk(courseId);
-    if (!currentCourse) return next(new AppError('Coruse not found', 404));
+    if (!currentCourse) return next(new AppError('Course not found', 404));
 
     const currentModule = await courseModule.findOne({where: { id: moduleId, courseId }});
     if (!currentModule) return next(new AppError('Module not found in the specified course', 404));
@@ -293,4 +321,19 @@ const getMaxScoreForCourse = async (courseId) => {
       return result[0].totalQuestions;
 }
 
-module.exports = { create, getWith, update, deleted, addModules, addLessons, addTests, addQuestionsAndAnswers, getModuleTests, getAllCourses, updateProgress, completeCourse };
+module.exports = { 
+    create, 
+    getWith,
+    update, 
+    deleted, 
+    addModules, 
+    addLessons, 
+    addTests, 
+    addQuestionsAndAnswers, 
+    getModuleTests, 
+    getAllCourses, 
+    updateProgress, 
+    completeCourse, 
+    getStarted, 
+    getUserCourses 
+};
