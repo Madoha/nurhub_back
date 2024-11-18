@@ -16,20 +16,12 @@ const getProfile = catchAsync(async (req, res, next) => {
 
 const getStreak = catchAsync(async (req, res, next) => {
     const userId = req.params.id;
-    const currentUser = await user.findByPk(userId);
+    
+    const userStreak = await userService.getUserStreak(userId);
 
-    if (!currentUser) {
-        throw new AppError('course not found', 404)
-    }
-
-    const userStreak = await streak.findOne({where: { userId }})
-    if (!userStreak) {
-        throw new AppError('user streak not found', 404)
-    }
-  
     return res.json({
         success: true,
-        userStreak
+        data: userStreak
     });
 });
 
