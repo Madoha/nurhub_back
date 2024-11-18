@@ -259,10 +259,10 @@ const completeCourse = catchAsync(async (req, res, next) => {
     // todo coins course migrations
     const userScore = progress.score;
     const allScoreCount = await getMaxScoreForCourse(courseId);
-    const leastScore = (allScoreCount / progress.totalModules) * 0.8;
+    const leastScore = allScoreCount * 0.8;
     const coinsEarned = progress.coinsEarned;
     user.coins += coinsEarned;
-    if ((!userScore >= leastScore)){
+    if (!(userScore >= leastScore)){
         throw new AppError('Ваша средняя оценка меньше 80 процентов, у вас нет прав закончить курс', 400); 
     }
 
