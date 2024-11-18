@@ -7,7 +7,7 @@ const streakCheck = require('../middlewares/streakMiddleware');
 const router = require('express').Router();
 
 router.route('/:id')
-    .get(authentication, restrictTo(ROLE_IDS.ADMIN), streakCheck, getProfile);
+    .get(authentication, restrictTo(ROLE_IDS.ADMIN, ROLE_IDS.TESTER), streakCheck, getProfile);
 
 router.route('/:id/streak').get(getStreak)
 

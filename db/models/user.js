@@ -54,6 +54,10 @@ const user = sequelize.define('users', {
     //   }
     // }
   },
+  coins: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
   email: {
     type: DataTypes.STRING,
     allowNull: true,

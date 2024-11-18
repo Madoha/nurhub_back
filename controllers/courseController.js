@@ -7,6 +7,8 @@ const test = require('../db/models/test');
 const sequelize = require('../config/database');
 const question = require('../db/models/question');
 const answer = require('../db/models/answer');
+const userCourseProgress = require('../db/models/usercourseprogress');
+const certificate = require('../db/models/certificate');
 
 const create = catchAsync(async (req, res, next) => {
     const newCourse = course.create(req.body);
@@ -204,4 +206,91 @@ const getModuleTests = catchAsync(async (req, res, next) => {
     });
 });
 
-module.exports = { create, getWith, update, deleted, addModules, addLessons, addTests, addQuestionsAndAnswers, getModuleTests, getAllCourses };
+const updateProgress = catchAsync(async (req, res, next) => {
+    const { courseId, moduleId } = req.params;
+    const userId = req.user.id;
+    const { testScore } = req.body;
+
+    const currentCourse = await course.findByPk(courseId);
+    if (!currentCourse) return next(new AppError('Coruse not found', 404));
+
+    const currentModule = await courseModule.findOne({where: { id: moduleId, courseId }});
+    if (!currentModule) return next(new AppError('Module not found in the specified course', 404));
+
+    const progress = await userCourseProgress.findOne({where: { userId, courseId }});
+
+    if (!progress) {
+        throw new AppError('Прогресс по курсу не найден', 404);
+    }
+
+    if (progress.completedModules.include(moduleId)){
+        return res.json({success: true, message: 'already completed'});
+    }
+
+    progress.completedModules.push(moduleId);
+    progress.score += testScore;
+
+    let coinsBonus = req.userStreak >= 5 ? 5 : 0;
+
+    // if (testScore >= 80) { } 
+    progress.coinsEarned += (1 + coinsBonus);
+
+    if (progress.completedModules.length === progress.totalModules) {
+        progress.coinsEarned += 5;
+    }
+
+    await progress.save();
+    return res.json({success: true, message: 'progress updated'})
+});
+
+const completeCourse = catchAsync(async (req, res, next) => {
+    const { courseId } = req.params;
+    const userId = req.user.id;
+
+    const currentCourse = await course.findByPk(courseId);
+    if (!currentCourse) return next(new AppError('Coruse not found', 404));
+
+    const progress = await progress.findOne({where: { courseId, userId }});
+
+    if (!progress) return next(new AppError('please start the course and complete all modules', 400));
+
+    if (progress.completedModules.length !== progress.totalModules) return next(new AppError('not allowed', 400));
+
+    // todo coins course migrations
+    const userScore = progress.score;
+    const allScoreCount = await getMaxScoreForCourse(courseId);
+    const leastScore = (allScoreCount / progress.totalModules) * 0.8;
+    const coinsEarned = progress.coinsEarned;
+    user.coins += coinsEarned;
+    if ((!userScore >= leastScore)){
+        throw new AppError('Ваша средняя оценка меньше 80 процентов, у вас нет прав закончить курс', 400); 
+    }
+
+    const result = await certificate.create({
+        score: userScore,
+        userId: userId,
+        courseId: courseId
+    });
+
+    await user.save();
+    return res.json({status: true, score: result.score, coins: coinsEarned})
+});
+
+const getMaxScoreForCourse = async (courseId) => {
+    const query = `
+        SELECT COUNT(q.id) AS totalQuestions
+        FROM questions q
+        JOIN tests t ON q.testId = t.id
+        JOIN courseModules cm ON t.courseModuleId = cm.id
+        WHERE cm.courseId = :courseId
+    `;
+
+    const result = await sequelize.query(query, {
+        replacements: { courseId },
+        type: sequelize.QueryTypes.SELECT,
+      });
+
+      return result[0].totalQuestions;
+}
+
+module.exports = { create, getWith, update, deleted, addModules, addLessons, addTests, addQuestionsAndAnswers, getModuleTests, getAllCourses, updateProgress, completeCourse };

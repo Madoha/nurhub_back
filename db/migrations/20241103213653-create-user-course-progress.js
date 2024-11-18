@@ -11,12 +11,23 @@ module.exports = {
       },
       userId: {
         type: Sequelize.INTEGER,
+        allowNull: false,
       },
       courseId: {
         type: Sequelize.INTEGER,
+        allowNull: false,
       },
       completedModules: {
-        type: Sequelize.INTEGER
+        type: Sequelize.ARRAY(Sequelize.INTEGER),
+        defaultValue: []
+      },
+      totalModules: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0,
+      },
+      coinsEarned: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0
       },
       score: {
         type: Sequelize.FLOAT

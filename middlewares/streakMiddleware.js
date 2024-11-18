@@ -29,7 +29,7 @@ const streakCheck = catchAsync(async (req, res, next) => {
         }
     }
 
-    req.userStreak = userStreak;
+    req.userStreak = userStreak.streakCount;
 
     next();
 });

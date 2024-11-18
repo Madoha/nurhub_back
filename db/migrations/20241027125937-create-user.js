@@ -25,6 +25,10 @@ module.exports = {
       email: {
         type: Sequelize.STRING
       },
+      coins: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
       password: {
         type: Sequelize.STRING,
         allowNull: true

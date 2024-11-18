@@ -1,5 +1,6 @@
-const { create, getWith, update, deleted, addModules, addLessons, addTests, addQuestionsAndAnswers, getModuleTests, getAllCourses } = require('../controllers/courseController');
+const { create, getWith, update, deleted, addModules, addLessons, addTests, addQuestionsAndAnswers, getModuleTests, getAllCourses, updateProgress, completeCourse } = require('../controllers/courseController');
 const authentication = require('../middlewares/authMiddleware');
+const streakCheck = require('../middlewares/streakMiddleware');
 
 const router = require('express').Router();
 
@@ -20,5 +21,8 @@ router.route('/:courseId/modules/:moduleId/tests')
     .get(getModuleTests);
 
 router.route('/:courseId/modules/:moduleId/test/:testId').post(addQuestionsAndAnswers);
+
+router.route('/:courseId/modules/:moduleId/complete').post(authentication, streakCheck, updateProgress);
+router.route('/:courseId/complete').get(authentication, streakCheck, completeCourse);
 
 module.exports = router;

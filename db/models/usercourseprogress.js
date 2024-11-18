@@ -18,10 +18,18 @@ const userCourseProgress = sequelize.define('userCourseProgresses', {
     type: DataTypes.INTEGER
   },
   completedModules: {
+    type: DataTypes.ARRAY(DataTypes.INTEGER),
+    defaultValue: []
+  },
+  totalModules: {
     type: DataTypes.INTEGER
   },
   score: {
     type: DataTypes.FLOAT
+  },
+  coinsEarned: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   },
   createdAt: {
     allowNull: false,
