@@ -1,6 +1,6 @@
 const catchAsync = require("../utils/catchAsync");
 const AppError = require('../utils/appError');
-const authService = require('../services/auth/authService');
+const authService = require('../services/auth/authService'); 
 const UserRegistrationDto = require('../dto/user/userRegistrationDto');
 const { OAuth2Client } = require('google-auth-library');
 const { refreshTokenCookieOptions } = require('../utils/authUtils');

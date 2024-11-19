@@ -1,15 +1,20 @@
-require('dotenv').config({path: `${process.cwd()}/.env`});
+require('dotenv').config({ path: `${process.cwd()}/.env` });
 const express = require('express');
 const cors = require('cors');
-const catchAsync = require('./utils/catchAsync');
+const cookieParser = require('cookie-parser');
+const { createServer } = require('http');
+const { initializeSocket } = require('./utils/socket');
+
 const authRouter = require('./route/authRoute');
 const userRouter = require('./route/userRoute');
 const courseRouter = require('./route/courseRouter');
-const globalErrorHandler = require('./middlewares/errorMiddleware');
+const catchAsync = require('./utils/catchAsync');
 const AppError = require('./utils/appError');
-const cookieParser = require('cookie-parser');
+const globalErrorHandler = require('./middlewares/errorMiddleware');
 
 const app = express();
+const httpServer = createServer(app);
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
@@ -28,8 +33,11 @@ app.use('*', catchAsync(async (req, res, next) => {
 
 app.use(globalErrorHandler);
 
-const PORT = process.env.APP_PORT || 4000;
+(async () => {
+    await initializeSocket(httpServer);
 
-app.listen(PORT, () => {
-    console.log('server listening');
-})
+    const PORT = process.env.APP_PORT || 4000;
+    httpServer.listen(PORT, () => {
+        console.log(`server listening on ${PORT}`)
+    })
+})();

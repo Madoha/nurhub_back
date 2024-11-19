@@ -1,7 +1,7 @@
 const authentication = require('../middlewares/authMiddleware');
 const { getProfile, getStreak } = require('../controllers/userController');
 const { restrictTo } = require('../controllers/authController');
-const ROLE_IDS = require('../config/roles');
+const ROLE_IDS = require('../enum/roles');
 const streakCheck = require('../middlewares/streakMiddleware');
 
 const router = require('express').Router();

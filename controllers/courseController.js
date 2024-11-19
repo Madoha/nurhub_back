@@ -9,6 +9,9 @@ const question = require('../db/models/question');
 const answer = require('../db/models/answer');
 const userCourseProgress = require('../db/models/usercourseprogress');
 const certificate = require('../db/models/certificate');
+const { sendAchievementNotification } = require('../utils/socket');
+const AchievementService = require('../services/achievements/achievementService');
+const ACHIEVEMENTS = require('../enum/achievements');
 
 const create = catchAsync(async (req, res, next) => {
     const newCourse = course.create(req.body);
@@ -213,14 +216,21 @@ const getStarted = catchAsync(async (req, res, next) => {
     const currentCourse = await course.findByPk(courseId);
     if (!currentCourse) return next(new AppError('Course not found', 404));
 
-    // todo achievements
+    const gettingAchivement = await AchievementService.unlockAchievement(userId, ACHIEVEMENTS.FIRST_FIGHT);
+    sendAchievementNotification(userId, {
+        id: gettingAchivement.id,
+        name: gettingAchivement.name,
+        description: gettingAchivement.description,
+        reward: gettingAchivement.reward,
+        icon: gettingAchivement.icon
+    });
 
     await userCourseProgress.create({
         userId,
         courseId
     });
 
-    return res.status(200);
+    return res.status(200).json({ message: 'Course started successfully' });
 });
 
 const getUserCourses = catchAsync(async (req, res, next) => {
