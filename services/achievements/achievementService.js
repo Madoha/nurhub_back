@@ -15,7 +15,7 @@ class AchievementService {
             },
         });
 
-        if(alreadyUnlocked) return { message: 'Achievement already unlocked', isAchievement };
+        if(alreadyUnlocked) return false; // { message: 'Achievement already unlocked', isAchievement };
 
         await userAchievement.create({
             userId,

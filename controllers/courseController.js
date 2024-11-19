@@ -217,13 +217,15 @@ const getStarted = catchAsync(async (req, res, next) => {
     if (!currentCourse) return next(new AppError('Course not found', 404));
 
     const gettingAchivement = await AchievementService.unlockAchievement(userId, ACHIEVEMENTS.FIRST_FIGHT);
-    sendAchievementNotification(userId, {
-        id: gettingAchivement.id,
-        name: gettingAchivement.name,
-        description: gettingAchivement.description,
-        reward: gettingAchivement.reward,
-        icon: gettingAchivement.icon
-    });
+    if (gettingAchivement){
+        sendAchievementNotification(userId, {
+            id: gettingAchivement.id,
+            name: gettingAchivement.name,
+            description: gettingAchivement.description,
+            reward: gettingAchivement.reward,
+            icon: gettingAchivement.icon
+        });
+    }
 
     await userCourseProgress.create({
         userId,
@@ -309,6 +311,17 @@ const completeCourse = catchAsync(async (req, res, next) => {
         userId: userId,
         courseId: courseId
     });
+
+    const gettingAchivement = await AchievementService.unlockAchievement(userId, ACHIEVEMENTS.FIRST_FIGHT_COMPLETE);
+    if (gettingAchivement){
+        sendAchievementNotification(userId, {
+            id: gettingAchivement.id,
+            name: gettingAchivement.name,
+            description: gettingAchivement.description,
+            reward: gettingAchivement.reward,
+            icon: gettingAchivement.icon
+        });
+    }
 
     await user.save();
     return res.json({status: true, score: result.score, coins: coinsEarned})
