@@ -4,10 +4,8 @@ let io;
 
 const initializeSocket = async (httpServer) => {
     io = new Server(httpServer, {
-        cors: {
-            origin: process.env.CLIENT_URL,
-            credentials: true,
-        },
+        cors: process.env.CLIENT_URL,
+        serveClient: false,
     });
 
     io.on('connection', (socket) => {
@@ -22,7 +20,7 @@ const initializeSocket = async (httpServer) => {
 
 const sendAchievementNotification = (userId, userAchievement) => {
     if (!io) throw new Error('Socket.io not initialized');
-    io.to(`user_${userId}`).emit('achievementUnlocked', userAchievement);
+    io.emit('achievementUnlocked', userAchievement);
 }
 
 module.exports = {

@@ -19,3 +19,6 @@ services:
       - 13000:4001
     depends_on:
       - db
+networks:
+  default:
+    driver: bridge

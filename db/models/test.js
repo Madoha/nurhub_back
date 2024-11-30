@@ -14,7 +14,7 @@ const test = sequelize.define('tests', {
     type: DataTypes.INTEGER
   },
   type: {
-    type: DataTypes.ENUM('mcq', 'creative')
+    type: DataTypes.ENUM('mcq', 'open', 'interactive')
   },
   courseModuleId: {
     type: DataTypes.INTEGER

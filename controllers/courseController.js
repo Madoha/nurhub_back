@@ -12,6 +12,7 @@ const certificate = require('../db/models/certificate');
 const { sendAchievementNotification } = require('../utils/socket');
 const AchievementService = require('../services/achievements/achievementService');
 const ACHIEVEMENTS = require('../enum/achievements');
+const CourseService = require('../services/courseService');
 
 const create = catchAsync(async (req, res, next) => {
     const newCourse = course.create(req.body);
@@ -22,58 +23,35 @@ const getAllCourses = catchAsync(async (req, res, next) => {
     const courses = await course.findAll();
     res.json({
         success:true,
-        courses
+        data: courses
     })
 })
 
 const getWith = catchAsync(async (req, res, next) => {
     const courseId = req.params.id;
-    const currentCourse = await course.findByPk(courseId);
-    if (!currentCourse) {
-        return next(new AppError('Course not found', 404));
-    }
+    const result = await CourseService.getCourseWithInfo(courseId);
 
-    const courseModules = await courseModule.findAll({where: {courseId: courseId}});
-    
-    const modulesWithLessons = await Promise.all(
-        courseModules.map(async (curModule) => {
-            const moduleLessons = await lesson.findAll({where: { courseModuleId: curModule.id }});
-            return { ...curModule.dataValues, lessons: moduleLessons.map((lesson) => lesson.dataValues) }
-        })
-    );
-
-    const response = {
-        ...currentCourse.dataValues,
-        modules: modulesWithLessons
-    };
-
-    return res.json(response);
+    return res.json(result);
 });
 
 const update = catchAsync(async (req, res, next) => {
     const courseId = req.params.id;
-    const [updated] = await course.update(req.body, { where: { id: courseId } });
-    if (!updated) throw new AppError('course not found', 404);
-    const updatedCourse = await course.findByPk(courseId);
-    return res.json(updatedCourse);
+    const result = await CourseService.updateCourse(courseId, req.body);
+    return res.json(result);
 });
 
 const deleted = catchAsync(async (req, res, next) => {
-    const deletedCourse = await course.destroy({where: { id: req.params.id }});
-    if (!deletedCourse) throw new AppError('course not found', 404);
+    const courseId = req.params.id;
+    await CourseService.deleteCourse(courseId);
     return res.json({message: 'course deleted'});
 });
 
 const addModules = catchAsync(async (req, res, next) => {
-    const currentCourse = await course.findByPk(req.params.id);
-    if (!currentCourse) throw new AppError('course not found');
+    const courseId = req.params.id;
+    const courseModules = req.body;
+    const result = await CourseService.addModules(courseId, courseModules)
 
-    const modules = await courseModule.bulkCreate(req.body.map(module => ({
-        ...module,
-        courseId: req.params.id
-    })));
-
-    return res.status(201).json(modules);
+    return res.status(201).json(result);
 });
 
 const addLessons = catchAsync(async (req, res, next) => {
@@ -235,6 +213,15 @@ const getStarted = catchAsync(async (req, res, next) => {
     return res.status(200).json({ message: 'Course started successfully' });
 });
 
+// to test socket io
+const testACh = catchAsync(async (req, res, next) => {
+    console.log('sending')
+    sendAchievementNotification(1, {
+        id: 3,
+        name: 'first module'
+    });
+})
+
 const getUserCourses = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
 
@@ -246,6 +233,8 @@ const getUserCourses = catchAsync(async (req, res, next) => {
     });
 });
 
+
+// update for mcq open interactive and also if multiple tests ?? then handle it
 const updateProgress = catchAsync(async (req, res, next) => {
     const { courseId, moduleId } = req.params;
     const userId = req.user.id;
@@ -327,6 +316,13 @@ const completeCourse = catchAsync(async (req, res, next) => {
     return res.json({status: true, score: result.score, coins: coinsEarned})
 });
 
+const openQuestionAnswerCheck = catchAsync(async (req, res, next) => {
+    const { courseId, moduleId, testId, questionId } = req.params;
+    const userId = req.user.id;
+    // todo gemini api open question
+});
+
+// private methods
 const getMaxScoreForCourse = async (courseId) => {
     const query = `
         SELECT COUNT(q.id) AS totalQuestions
@@ -358,5 +354,7 @@ module.exports = {
     updateProgress, 
     completeCourse, 
     getStarted, 
-    getUserCourses 
+    getUserCourses,
+    openQuestionAnswerCheck,
+    testACh
 };
