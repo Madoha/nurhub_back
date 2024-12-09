@@ -27,6 +27,7 @@ const getAllCourses = catchAsync(async (req, res, next) => {
     })
 })
 
+// get all info(modules, lessons, courses) of the course \\ version 2
 const getWith = catchAsync(async (req, res, next) => {
     const courseId = req.params.id;
     const result = await CourseService.getCourseWithInfo(courseId);
@@ -34,12 +35,14 @@ const getWith = catchAsync(async (req, res, next) => {
     return res.json(result);
 });
 
+// update course
 const update = catchAsync(async (req, res, next) => {
     const courseId = req.params.id;
     const result = await CourseService.updateCourse(courseId, req.body);
     return res.json(result);
 });
 
+// delete course
 const deleted = catchAsync(async (req, res, next) => {
     const courseId = req.params.id;
     await CourseService.deleteCourse(courseId);
@@ -54,6 +57,7 @@ const addModules = catchAsync(async (req, res, next) => {
     return res.status(201).json(result);
 });
 
+// start from here
 const addLessons = catchAsync(async (req, res, next) => {
     const currentModule = await courseModule.findByPk(req.params.moduleId);
     if (!currentModule) throw new AppError('module not found');
@@ -188,7 +192,7 @@ const getModuleTests = catchAsync(async (req, res, next) => {
 });
 
 const getStarted = catchAsync(async (req, res, next) => {
-    const { courseId } = req.params;
+    const courseId = req.params;
     const userId = req.user.id;
 
     const currentCourse = await course.findByPk(courseId);
@@ -196,7 +200,7 @@ const getStarted = catchAsync(async (req, res, next) => {
 
     const gettingAchivement = await AchievementService.unlockAchievement(userId, ACHIEVEMENTS.FIRST_FIGHT);
     if (gettingAchivement){
-        sendAchievementNotification(userId, {
+        sendAchievementNotification({
             id: gettingAchivement.id,
             name: gettingAchivement.name,
             description: gettingAchivement.description,
@@ -213,14 +217,39 @@ const getStarted = catchAsync(async (req, res, next) => {
     return res.status(200).json({ message: 'Course started successfully' });
 });
 
+const getModules = catchAsync(async (req, res, next) => {
+    const courseId = req.params.id;
+
+    const currentCourse = await course.findByPk(courseId);
+    if (!currentCourse) return next(new AppError('Course not found', 404));
+
+    const courseModules = await courseModule.findAll({where: { courseId }})
+
+    return res.json(courseModules);
+});
+
+const getModuleLessons = catchAsync(async (req, res, next) => {
+    const { courseId, moduleId } = req.params;
+
+    const currentCourse = await course.findByPk(courseId);
+    if (!currentCourse) return next(new AppError('Course not found', 404));
+
+    const currentModule = await courseModule.findByPk(moduleId);
+    if (!currentModule) return next(new AppError('Module not found', 404));
+
+    const currentLessons = await lesson.findAll({where: { courseModuleId: moduleId }});
+
+    return res.json(currentLessons)
+});
+
 // to test socket io
-const testACh = catchAsync(async (req, res, next) => {
-    console.log('sending')
-    sendAchievementNotification(1, {
-        id: 3,
-        name: 'first module'
-    });
-})
+// const testACh = catchAsync(async (req, res, next) => {
+//     console.log('sending')
+//     sendAchievementNotification(1, {
+//         id: 3,
+//         name: 'first module'
+//     });
+// })
 
 const getUserCourses = catchAsync(async (req, res, next) => {
     const userId = req.user.id;
@@ -303,7 +332,7 @@ const completeCourse = catchAsync(async (req, res, next) => {
 
     const gettingAchivement = await AchievementService.unlockAchievement(userId, ACHIEVEMENTS.FIRST_FIGHT_COMPLETE);
     if (gettingAchivement){
-        sendAchievementNotification(userId, {
+        sendAchievementNotification({
             id: gettingAchivement.id,
             name: gettingAchivement.name,
             description: gettingAchivement.description,
@@ -354,7 +383,8 @@ module.exports = {
     updateProgress, 
     completeCourse, 
     getStarted, 
+    getModules,
+    getModuleLessons,
     getUserCourses,
     openQuestionAnswerCheck,
-    testACh
 };

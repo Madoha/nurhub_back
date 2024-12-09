@@ -4,6 +4,11 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { createServer } = require('http');
 const { initializeSocket } = require('./utils/socket');
+const authentication = require('./middlewares/authMiddleware');
+
+const router = express.Router();
+const upload = require("./middlewares/multer");
+const cloudinary = require('./utils/cloudinary')
 
 const authRouter = require('./route/authRoute');
 const userRouter = require('./route/userRoute');
@@ -16,9 +21,10 @@ const app = express();
 const httpServer = createServer(app);
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
-    origin: process.env.CLIENT_URL,
+    origin: '*',
     credentials: true
 }));
 
@@ -37,7 +43,7 @@ app.use(globalErrorHandler);
     await initializeSocket(httpServer);
 
     const PORT = process.env.APP_PORT || 4000;
-    httpServer.listen(PORT, () => {
+    httpServer.listen(PORT, '0.0.0.0', () => {
         console.log(`server listening on ${PORT}`)
     })
 })();

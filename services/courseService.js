@@ -1,6 +1,7 @@
 const course = require("../db/models/course");
 const courseModule = require('../db/models/coursemodule');
 const AppError = require('../utils/appError');
+const lesson = require('../db/models/lesson')
 
 class CourseService{
     // for open question if need

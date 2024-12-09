@@ -6,8 +6,9 @@ module.exports = class UserResponseDto {
     createdAt;
     updatedAt;
     role;
+    avatarUrl;
 
-    constructor({username, firstName, lastName, email, createdAt, updatedAt, role}){
+    constructor({username, firstName, lastName, email, createdAt, updatedAt, role, avatarUrl}){
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -15,5 +16,6 @@ module.exports = class UserResponseDto {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.role = role;
+        this.avatarUrl = avatarUrl;
     }
 }

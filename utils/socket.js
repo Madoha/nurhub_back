@@ -18,7 +18,7 @@ const initializeSocket = async (httpServer) => {
     return io;
 };
 
-const sendAchievementNotification = (userId, userAchievement) => {
+const sendAchievementNotification = (userAchievement) => {
     if (!io) throw new Error('Socket.io not initialized');
     io.emit('achievementUnlocked', userAchievement);
 }

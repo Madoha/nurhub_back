@@ -2,11 +2,15 @@ const achievement = require('../../db/models/achievement');
 const userAchievement = require('../../db/models/userachievement');
 const AppError = require('../../utils/appError');
 const io = require('../../utils/socket');
+const user = require('../../db/models/user');
 
 class AchievementService {
     static async unlockAchievement(userId, achievementKey) { // можно как статик, и не надо будет инстанс создавать
         const isAchievement = await achievement.findOne({where: { achievementKey }}); 
         if (!isAchievement) throw new AppError('achievement not found', 404);
+
+        const currentUser = await user.findByPk(userId);
+        if (!currentUser) throw new AppError('user not found', 404);
 
         const alreadyUnlocked = await userAchievement.findOne({
             where: {
@@ -16,6 +20,9 @@ class AchievementService {
         });
 
         if(alreadyUnlocked) return false; // { message: 'Achievement already unlocked', isAchievement };
+
+        currentUser.coins += isAchievement.reward;
+        await currentUser.save();
 
         await userAchievement.create({
             userId,

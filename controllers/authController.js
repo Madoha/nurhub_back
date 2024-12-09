@@ -81,10 +81,12 @@ const restrictTo = (...allowedRoleIds) => {
 };
 
 const logout = catchAsync(async (req, res, next) => {
-    const { refreshToken } = req.cookies;
-    const token = await authService.logout(refreshToken);
+    // const { refreshToken } = req.cookies;
+    // console.log('cccc', req.cookies);
+    // const token = await authService.logout(refreshToken);
     res.clearCookie('refreshToken');
-    return res.json(token);
+    res.clearCookie('authToken');
+    return res.json();
 });
 
 const refreshToken = catchAsync(async (req, res, next) => {
